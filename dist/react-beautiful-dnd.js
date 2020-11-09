@@ -9049,7 +9049,7 @@
   var idle$2 = {
     type: 'IDLE'
   };
-  var defaultTimeForLongPress = 120;
+  var defaultTimeForLongPress = 0;
   var forcePressThreshold = 0.15;
 
   function getWindowBindings(_ref) {
