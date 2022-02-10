@@ -52,7 +52,7 @@ export default class ErrorBoundary extends React.Component<Props> {
 
     if (callbacks.isDragging()) {
       if (event.message.includes('ResizeObserver loop limit exceeded')) {
-        console.log(event.message)
+        warning(event.message);
       } else {
         callbacks.tryAbort();
         warning(`

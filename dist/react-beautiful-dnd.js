@@ -116,8 +116,12 @@
         var callbacks = _this.getCallbacks();
 
         if (callbacks.isDragging()) {
-          callbacks.tryAbort();
-           warning("\n        An error was caught by our window 'error' event listener while a drag was occurring.\n        The active drag has been aborted.\n      ") ;
+          if (event.message.includes('ResizeObserver loop limit exceeded')) {
+             warning(event.message) ;
+          } else {
+            callbacks.tryAbort();
+             warning("\n          An error was caught by our window 'error' event listener while a drag was occurring.\n          The active drag has been aborted.\n          ") ;
+          }
         }
 
         var err = event.error;
@@ -8446,8 +8450,8 @@
   var AppContext = React__default.createContext(null);
 
   var peerDependencies = {
-  	react: "^16.8.5",
-  	"react-dom": "^16.8.5"
+  	react: "^16.8.5 || ^17.0.0",
+  	"react-dom": "^16.8.5 || ^17.0.0"
   };
 
   var semver = /(\d+)\.(\d+)\.(\d+)/;
@@ -9186,7 +9190,7 @@
     }];
   }
 
-  function useMouseSensor$1(api) {
+  function useTouchSensor(api) {
     var phaseRef = React.useRef(idle$2);
     var unbindEventsRef = React.useRef(noop);
     var getPhase = useCallback(function getPhase() {
@@ -9742,7 +9746,7 @@
     return preDrag;
   }
 
-  var defaultSensors = [useMouseSensor, useKeyboardSensor, useMouseSensor$1];
+  var defaultSensors = [useMouseSensor, useKeyboardSensor, useTouchSensor];
   function useSensorMarshal(_ref4) {
     var contextId = _ref4.contextId,
         store = _ref4.store,
@@ -11529,6 +11533,9 @@
   exports.Draggable = PublicDraggable;
   exports.Droppable = ConnectedDroppable;
   exports.resetServerContext = resetServerContext;
+  exports.useKeyboardSensor = useKeyboardSensor;
+  exports.useMouseSensor = useMouseSensor;
+  exports.useTouchSensor = useTouchSensor;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

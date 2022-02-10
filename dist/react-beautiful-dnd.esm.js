@@ -102,8 +102,12 @@ var ErrorBoundary = function (_React$Component) {
       var callbacks = _this.getCallbacks();
 
       if (callbacks.isDragging()) {
-        callbacks.tryAbort();
-        process.env.NODE_ENV !== "production" ? warning("\n        An error was caught by our window 'error' event listener while a drag was occurring.\n        The active drag has been aborted.\n      ") : void 0;
+        if (event.message.includes('ResizeObserver loop limit exceeded')) {
+          process.env.NODE_ENV !== "production" ? warning(event.message) : void 0;
+        } else {
+          callbacks.tryAbort();
+          process.env.NODE_ENV !== "production" ? warning("\n          An error was caught by our window 'error' event listener while a drag was occurring.\n          The active drag has been aborted.\n          ") : void 0;
+        }
       }
 
       var err = event.error;
@@ -5442,8 +5446,8 @@ function useHiddenTextElement(_ref2) {
 var AppContext = React.createContext(null);
 
 var peerDependencies = {
-	react: "^16.8.5",
-	"react-dom": "^16.8.5"
+	react: "^16.8.5 || ^17.0.0",
+	"react-dom": "^16.8.5 || ^17.0.0"
 };
 
 var semver = /(\d+)\.(\d+)\.(\d+)/;
@@ -6182,7 +6186,7 @@ function getHandleBindings(_ref2) {
   }];
 }
 
-function useMouseSensor$1(api) {
+function useTouchSensor(api) {
   var phaseRef = useRef(idle$2);
   var unbindEventsRef = useRef(noop);
   var getPhase = useCallback(function getPhase() {
@@ -6738,7 +6742,7 @@ function tryStart(_ref3) {
   return preDrag;
 }
 
-var defaultSensors = [useMouseSensor, useKeyboardSensor, useMouseSensor$1];
+var defaultSensors = [useMouseSensor, useKeyboardSensor, useTouchSensor];
 function useSensorMarshal(_ref4) {
   var contextId = _ref4.contextId,
       store = _ref4.store,
@@ -8524,4 +8528,4 @@ var ConnectedDroppable = connect(makeMapStateToProps$1, mapDispatchToProps$1, nu
 })(Droppable);
 ConnectedDroppable.defaultProps = defaultProps;
 
-export { DragDropContext, PublicDraggable as Draggable, ConnectedDroppable as Droppable, resetServerContext };
+export { DragDropContext, PublicDraggable as Draggable, ConnectedDroppable as Droppable, resetServerContext, useKeyboardSensor, useMouseSensor, useTouchSensor };
