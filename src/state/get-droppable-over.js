@@ -29,51 +29,36 @@ type Args = {|
   droppables: DroppableDimensionMap,
 |};
 
-type WithDistance = {|
-  distance: number,
-  id: DroppableId,
-|};
+function getCandidateWithGreatestOverlap({ pageBorderBox, candidates }) {
+  let maxOverlapArea = 0;
+  let candidateWithMaxOverlap = null;
 
-type GetFurthestArgs = {|
-  pageBorderBox: Rect,
-  draggable: DraggableDimension,
-  candidates: DroppableDimension[],
-|};
+  candidates.forEach(candidate => {
+    const active = candidate.subject.active;
+    if (!active) {
+      return;
+    }
 
-function getFurthestAway({
-  pageBorderBox,
-  draggable,
-  candidates,
-}: GetFurthestArgs): ?DroppableId {
-  // We are not comparing the center of the home list with the target list as it would
-  // give preference to giant lists
+    // Calculate the overlap rectangle
+    const overlapLeft = Math.max(pageBorderBox.left, active.left);
+    const overlapRight = Math.min(pageBorderBox.right, active.right);
+    const overlapTop = Math.max(pageBorderBox.top, active.top);
+    const overlapBottom = Math.min(pageBorderBox.bottom, active.bottom);
 
-  // We are measuring the distance from where the draggable started
-  // to where it is *hitting* the candidate
-  // Note: The hit point might technically not be in the bounds of the candidate
+    const overlapWidth = overlapRight - overlapLeft;
+    const overlapHeight = overlapBottom - overlapTop;
 
-  const startCenter: Position = draggable.page.borderBox.center;
-  const sorted: WithDistance[] = candidates
-    .map((candidate: DroppableDimension): WithDistance => {
-      const axis: Axis = candidate.axis;
-      const target: Position = patch(
-        candidate.axis.line,
-        // use the current center of the dragging item on the main axis
-        pageBorderBox.center[axis.line],
-        // use the center of the list on the cross axis
-        candidate.page.borderBox.center[axis.crossAxisLine],
-      );
+    // Check if there is an actual overlap
+    if (overlapWidth > 0 && overlapHeight > 0) {
+      const overlapArea = overlapWidth * overlapHeight;
+      if (overlapArea > maxOverlapArea) {
+        maxOverlapArea = overlapArea;
+        candidateWithMaxOverlap = candidate;
+      }
+    }
+  });
 
-      return {
-        id: candidate.descriptor.id,
-        distance: distance(startCenter, target),
-      };
-    })
-    // largest value will be first
-    .sort((a: WithDistance, b: WithDistance) => b.distance - a.distance);
-
-  // just being safe
-  return sorted[0] ? sorted[0].id : null;
+  return candidateWithMaxOverlap ? candidateWithMaxOverlap.descriptor.id : null;
 }
 
 export default function getDroppableOver({
@@ -149,10 +134,9 @@ export default function getDroppableOver({
 
   // Multiple options returned
   // Should only occur with really large items
-  // Going to use fallback: distance from home
-  return getFurthestAway({
+  // Going to use fallback: option with greatest overlap.
+  return getCandidateWithGreatestOverlap({
     pageBorderBox,
-    draggable,
     candidates,
   });
 }
