@@ -4824,22 +4824,35 @@
     return first.left < second.right && first.right > second.left && first.top < second.bottom && first.bottom > second.top;
   }
 
-  function getFurthestAway(_ref) {
+  function getCandidateWithGreatestOverlap(_ref) {
     var pageBorderBox = _ref.pageBorderBox,
-        draggable = _ref.draggable,
         candidates = _ref.candidates;
-    var startCenter = draggable.page.borderBox.center;
-    var sorted = candidates.map(function (candidate) {
-      var axis = candidate.axis;
-      var target = patch(candidate.axis.line, pageBorderBox.center[axis.line], candidate.page.borderBox.center[axis.crossAxisLine]);
-      return {
-        id: candidate.descriptor.id,
-        distance: distance(startCenter, target)
-      };
-    }).sort(function (a, b) {
-      return b.distance - a.distance;
+    var maxOverlapArea = 0;
+    var candidateWithMaxOverlap = null;
+    candidates.forEach(function (candidate) {
+      var active = candidate.subject.active;
+
+      if (!active) {
+        return;
+      }
+
+      var overlapLeft = Math.max(pageBorderBox.left, active.left);
+      var overlapRight = Math.min(pageBorderBox.right, active.right);
+      var overlapTop = Math.max(pageBorderBox.top, active.top);
+      var overlapBottom = Math.min(pageBorderBox.bottom, active.bottom);
+      var overlapWidth = overlapRight - overlapLeft;
+      var overlapHeight = overlapBottom - overlapTop;
+
+      if (overlapWidth > 0 && overlapHeight > 0) {
+        var overlapArea = overlapWidth * overlapHeight;
+
+        if (overlapArea > maxOverlapArea) {
+          maxOverlapArea = overlapArea;
+          candidateWithMaxOverlap = candidate;
+        }
+      }
     });
-    return sorted[0] ? sorted[0].id : null;
+    return candidateWithMaxOverlap ? candidateWithMaxOverlap.descriptor.id : null;
   }
 
   function getDroppableOver$1(_ref2) {
@@ -4892,9 +4905,8 @@
       return candidates[0].descriptor.id;
     }
 
-    return getFurthestAway({
+    return getCandidateWithGreatestOverlap({
       pageBorderBox: pageBorderBox,
-      draggable: draggable,
       candidates: candidates
     });
   }
@@ -8450,8 +8462,8 @@
   var AppContext = React__default.createContext(null);
 
   var peerDependencies = {
-  	react: "^16.8.5 || ^17.0.0",
-  	"react-dom": "^16.8.5 || ^17.0.0"
+  	react: "^16.8.5 || ^17.0.0 || ^18.0.0",
+  	"react-dom": "^16.8.5 || ^17.0.0 || ^18.0.0"
   };
 
   var semver = /(\d+)\.(\d+)\.(\d+)/;
